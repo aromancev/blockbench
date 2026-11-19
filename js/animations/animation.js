@@ -171,8 +171,11 @@ export class Animation extends AnimationItem {
 
 		let ik_null_objects = NullObjectAnimator.sortByIKDependencies(NullObject.all.filter(node => node.ik_target));
 
-		Timeline.time = 0;
-		while (Timeline.time <= this.length && Timeline.time <= 200) {
+		// Step by integer frame index instead of accumulating `interval`, which drifts
+		// past `this.length` through float error and drops the final frame
+		let sample_count = Math.floor(Math.min(this.length, 200) / interval + 1e-6) + 1;
+		for (let frame = 0; frame < sample_count; frame++) {
+			Timeline.time = frame * interval;
 			// Bones
 			Animator.showDefaultPose(true);
 			
@@ -192,7 +195,6 @@ export class Animation extends AnimationItem {
 				}
 			})
 			Animator.resetLastValues();
-			Timeline.time += interval;
 		}
 
 		Timeline.time = last_time;
