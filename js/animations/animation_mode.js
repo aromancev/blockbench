@@ -193,23 +193,25 @@ export const Animator = {
 		let point_positions = [];
 		let keyframe_positions = []
 		let keyframeUUIDs = []
-		let i = 0;
-		for (var time = start_time; time <= max_time; time += step) {
-			displayTime(time);
+		// Step by integer frame index instead of accumulating `step`, which drifts past
+		// `max_time` through float error and drops the final frame
+		let first_frame = Math.ceil(start_time / step - 1e-6);
+		let last_frame = Math.floor(max_time / step + 1e-6);
+		for (let frame = first_frame; frame <= last_frame; frame++) {
+			displayTime(frame * step);
 			let position = (target instanceof OutlinerNode && target.children)
 						 ? THREE.fastWorldPosition(target.mesh, new THREE.Vector3())
 						 : target.getWorldCenter(true);
 			position = position.toArray();
 			line_positions.push(...position);
 
-			let keyframe = keyframes[i];
+			let keyframe = keyframes[frame];
 			if (keyframe) {
 				keyframe_positions.push(...position);
 				keyframeUUIDs.push(keyframe.uuid);
 			} else {
 				point_positions.push(...position);
 			}
-			i++;
 		}
 		geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(line_positions), 3));
 		
